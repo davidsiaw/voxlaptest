@@ -274,6 +274,16 @@ namespace Voxlaptest
         [DllImport("voxlap")]
         extern static void setRectBrightness(ref lpoint3d p1, ref lpoint3d p2, byte brightness);
 
+        public enum LightingType
+        {
+            NoLighting = 0,
+            NormalLighting = 1,
+            Multipointsource = 2,
+        }
+
+        [DllImport("voxlap")]
+        extern static void setLightingMode(LightingType type);
+
         [DllImport("voxlap")]
         extern static void printString(int x, int y, int fcol, int bcol, string str);
 
@@ -395,6 +405,11 @@ namespace Voxlaptest
             {
                 cur = (IntPtr)genmipkv6((kv6data*)cur);
             }
+        }
+
+        public static void SetLightingMode(LightingType type)
+        {
+            setLightingMode(type);
         }
 
         public static void SetMaxScanDistToMax()

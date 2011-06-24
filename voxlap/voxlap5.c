@@ -7,9 +7,9 @@
 
 #define USEZBUFFER 1
 
-#define PREC (256*4096)
-#define CMPPREC (256*4096)
-#define FPREC (256*4096)
+#define PREC (256*2048)
+#define CMPPREC (256*2048)
+#define FPREC (256*2048)
 #define USEV5ASM 1
 #define SCISDIST 1.0
 #define GOLDRAT 0.3819660112501052 //Golden Ratio: 1 - 1/((sqrt(5)+1)/2)
@@ -165,7 +165,7 @@ static float cmprecip[CMPRECIPSIZ], wx0, wy0, wx1, wy1;
 static long iwx0, iwy0, iwx1, iwy1;
 static point3d gcorn[4];
 		 point3d ginor[4]; //Should be static, but... necessary for stupid pingball hack :/
-static long lastx[max(MAXYDIM,VSID)], uurendmem[MAXXDIM*2+8], *uurend;
+static long lastx[max(MAXYDIM,VSID)], uurendmem[MAXXDIM*2+9], *uurend;
 
 void mat0(point3d *, point3d *, point3d *, point3d *, point3d *, point3d *, point3d *, point3d *, point3d *, point3d *, point3d *, point3d *);
 void mat1(point3d *, point3d *, point3d *, point3d *, point3d *, point3d *, point3d *, point3d *, point3d *, point3d *, point3d *, point3d *);
@@ -183,12 +183,12 @@ extern "C" {
 	//Parallaxing sky variables (accessed by assembly code)
 long skyoff = 0, skyxsiz, *skylat = 0;
 
-__int64 gi, gcsub[8] =
+__int64 gi, gcsub[9] =
 {
-	0xff00ff00ff00ff,0xff00ff00ff00ff,0xff00ff00ff00ff,0xff00ff00ff00ff,
+	0xff00ff00ff00ff, 0xff00ff00ff00ff,0xff00ff00ff00ff,0xff00ff00ff00ff,0xff00ff00ff00ff,
 	0xff00ff00ff00ff,0xff00ff00ff00ff,0xff00ff00ff00ff,0xff00ff00ff00ff
 };
-long gylookup[1024+40], gmipnum = 0; //256+4+128+4+64+4+...
+long gylookup[2048+45], gmipnum = 0; //256+4+128+4+64+4+...
 long gpz[2], gdz[2], gxmip, gxmax, gixy[2], gpixy;
 static long gmaxscandist;
 
@@ -1411,7 +1411,7 @@ void setflash (float px, float py, float pz, long flashradius, long numang, long
 	vx5.miny = ipy-flashradius; vx5.maxy = ipy+flashradius+1;
 	vx5.minz = ipz-flashradius; vx5.maxz = ipz+flashradius+1;
 
-	if (flashradius > 2047) flashradius = 2047;
+	if (flashradius > 4095) flashradius = 4095;
 	flashradius *= FPREC;
 
 	flashbrival = (intens<<24);
@@ -3461,7 +3461,7 @@ void opticast ()
 #else
 	for(i=0;i<256+4;i++) gylookup[i] = (i*PREC-gposz);
 #endif
-	gmaxscandist = min(max(vx5.maxscandist,1),2047)*PREC;
+	gmaxscandist = min(max(vx5.maxscandist,1),4095)*PREC;
 
 #if (USEZBUFFER != 1)
 	hrend = hrendnoz; vrend = vrendnoz;
@@ -3601,6 +3601,9 @@ void opticast ()
 				ui = shldiv16(kmul,(sx<<16)-cx16);
 				u = mulshr16((p0<<16)-cy16,ui)+kadd;
 				while ((p0 > 0) && (u >= ui)) { u -= ui; lastx[--p0] = sx; }
+				if((u&0xffffff)==0){
+					int aaaaa=1;
+				}
 				uurend[sx] = u; uurend[sx+MAXXDIM] = ui; u += (p1-p0)*ui;
 				while ((p1 < yres) && (u < j)) { u += ui; lastx[p1++] = sx; }
 			}
@@ -3671,6 +3674,9 @@ void opticast ()
 			{
 				ui = shldiv16(kmul,(sx<<16)-cx16);
 				u = mulshr16((p0<<16)-cy16,ui)+kadd;
+				if((u&0xffffff)==0){
+					int aaaaa=1;
+				}
 				while ((p0 > 0) && (u >= ui)) { u -= ui; lastx[--p0] = sx; }
 				uurend[sx] = u; uurend[sx+MAXXDIM] = ui; u += (p1-p0)*ui;
 				while ((p1 < yres) && (u < j)) { u += ui; lastx[p1++] = sx; }
@@ -5853,7 +5859,7 @@ void setcube (long px, long py, long pz, long col)
 static __int64 qmulmip[8] =
 {
 	0x7fff7fff7fff7fff,0x4000400040004000,0x2aaa2aaa2aaa2aaa,0x2000200020002000,
-	0x1999199919991999,0x1555155515551555,0x1249124912491249,0x1000100010001000
+	0x1999199919991999,0x1555155515551555,0x1249124912491249,0x1000100010001000,
 };
 static long mixc[MAXZDIM>>1][8]; //4K
 static long mixn[MAXZDIM>>1];    //0.5K
@@ -8443,7 +8449,7 @@ void drawspherefill (float ox, float oy, float oz, float bakrad, long col)
 		if (ofogdist >= 0) //If fog enabled...
 		{
 			ftol(sqrt(ox*ox + oy*oy),&sx); //Use cylindrical x-y distance for fog
-			if (sx > 2047) sx = 2047;
+			if (sx > 4095) sx = 4095;
 			sx = (long)(*(short *)&foglut[sx]);
 			col = ((((( vx5.fogcol     &255)-( col     &255))*sx)>>15)    ) +
 					((((((vx5.fogcol>> 8)&255)-((col>> 8)&255))*sx)>>15)<< 8) +
@@ -9419,7 +9425,7 @@ static void updatereflects (vx5sprite *spr)
 	if (ofogdist >= 0)
 	{
 		ftol(sqrt((spr->p.x-gipos.x)*(spr->p.x-gipos.x) + (spr->p.y-gipos.y)*(spr->p.y-gipos.y)),&i);
-		if (i > 2047) i = 2047;
+		if (i > 4095) i = 4095;
 		fogmul = foglut[i];
 
 #if 0
@@ -12148,7 +12154,7 @@ void voxsetframebuffer (long p, long b, long x, long y)
 					(((__int64)(vx5.fogcol&0x00ff00))<< 8) +
 					(((__int64)(vx5.fogcol&0x0000ff))    );
 
-		if (vx5.maxscandist > 2047) vx5.maxscandist = 2047;
+		if (vx5.maxscandist > 4095) vx5.maxscandist = 4095;
 		if ((vx5.maxscandist != ofogdist) && (vx5.maxscandist > 0))
 		{
 			ofogdist = vx5.maxscandist;

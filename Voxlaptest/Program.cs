@@ -59,6 +59,9 @@ namespace Voxlaptest
                     if (keys[Sdl.SDLK_s] != 0) { forward = -10; }
                     if (keys[Sdl.SDLK_d] != 0) { strafe = 10; }
 
+                    int x, y;
+                    byte state = Sdl.SDL_GetMouseState(out x, out y);
+
                     Voxlap.dpoint3d vec = new Voxlap.dpoint3d()
                     {
                         x = forward * or.ifo.x + strafe * or.ist.x,
@@ -123,6 +126,18 @@ namespace Voxlaptest
 
                     }
 
+                    if (g_Event.type == Sdl.SDL_MOUSEBUTTONDOWN)
+                    {
+                        if (g_Event.button.button == Sdl.SDL_BUTTON_WHEELUP)
+                        {
+                            or.ipo.z -= 10;
+                        }
+
+                        if (g_Event.button.button == Sdl.SDL_BUTTON_WHEELDOWN)
+                        {
+                            or.ipo.z += 10;
+                        }
+                    }                    
 
                     if (g_Event.type == Sdl.SDL_KEYDOWN)
                     {
@@ -168,13 +183,14 @@ namespace Voxlaptest
             or = Voxlap.LoadNull();
             Voxlap.LoadSky("png/TOONSKY.JPG");
             //or = Voxlap.LoadVoxel("vxl/untitled.vxl");
+            Voxlap.SetLightingMode(Voxlap.LightingType.Multipointsource);
 
             or = new Voxlap.Orientation()
             {
                 ifo = new Voxlap.dpoint3d() { x = 1, y = 0, z = 0 },
                 ihe = new Voxlap.dpoint3d() { x = 0, y = 0, z = 1 },
                 ist = new Voxlap.dpoint3d() { x = 0, y = 1, z = 0 },
-                ipo = new Voxlap.dpoint3d() { x = 50, y = 50, z = 256-24}
+                ipo = new Voxlap.dpoint3d() { x = 50, y = 50, z = 256-200}
             };
 
             Voxlap.ClearRect(
@@ -202,6 +218,23 @@ namespace Voxlaptest
                     x = 0,
                     y = 0,
                     z = 256-8
+                },
+
+                new Voxlap.lpoint3d()
+                {
+                    x = 2047,
+                    y = 2047,
+                    z = 255
+                },
+                Color.BurlyWood);
+
+            Voxlap.SetRectWithWoodTexture(
+
+                new Voxlap.lpoint3d()
+                {
+                    x = 1000,
+                    y = 2047,
+                    z = -100
                 },
 
                 new Voxlap.lpoint3d()

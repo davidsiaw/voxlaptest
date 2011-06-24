@@ -35,3 +35,7 @@ DLLEXPORT void setRectBrightness(lpoint3d* hit1, lpoint3d* hit2, char brightness
 DLLEXPORT void printString(long x, long y, long fcol, long bcol, const char* str){
 	print6x8(x,y,fcol,bcol,"%s",str);
 }
+
+DLLEXPORT void setLightingMode(long mode) {
+	vx5.lightmode = mode;
+}
